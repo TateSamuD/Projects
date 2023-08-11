@@ -15,7 +15,7 @@ The gameplay() function takes in the Gss input and check if the character is pre
     if it was already mentioned nothing happens and a message is printed telling the user the character was already mentioned
 
 The newwrd() function is used to add words to the wrd_pl list
-    if the word is alredy present in the list it wont add the word
+    if the word is already present in the list it wont add the word
 """
 
 import random
