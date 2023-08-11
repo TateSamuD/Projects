@@ -20,12 +20,16 @@ The newwrd() function is used to add words to the wrd_pl list
 
 import random
 
-def hngman(t_lft,Crct_Gss,Wrng_Gss):
+
+def hngman(t_lft, Crct_Gss, Wrng_Gss):
     if t_lft == 0:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
         
 
 
@@ -34,15 +38,21 @@ ____________________________________________
 
 
         _________________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 1:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
         
             |
             |
@@ -51,15 +61,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 2:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |
             |
@@ -68,15 +84,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 3:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -85,15 +107,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 4:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -102,15 +130,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 5:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -119,15 +153,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 6:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -136,15 +176,21 @@ ____________________________________________
             |
             |
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 7:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -153,15 +199,21 @@ ____________________________________________
             |      /
             |     /
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     elif t_lft == 8:
-        print("""
+        print(
+            """
 ____________________________________________
-    """)
-        print("""
+    """
+        )
+        print(
+            """
              _______
             |       |
             |       O
@@ -170,12 +222,16 @@ ____________________________________________
             |      / \\
             |     /   \\
         ____|_____________
-        """)
-        print("""
+        """
+        )
+        print(
+            """
 ____________________________________________
-    """)
+    """
+        )
     print(Crct_Gss)
     print(Wrng_Gss)
+
 
 def gameplay(t_lft, Chc_pl, Crct_Gss):
     Wrng_Gss = []
@@ -203,46 +259,57 @@ def gameplay(t_lft, Chc_pl, Crct_Gss):
                 t_lft += 1
     return t_lft, Crct_Gss
 
+
 def newwrd(wrd_pl):
-    print("""
+    print(
+        """
 ____________________________________________
-    """)
+    """
+    )
     if len(wrd_pl) == 0:
         print("Your current word pool is empty")
 
     new_add = True
     while new_add == True:
-        add_wrd = str(input("Enter a new word to add to the word pool or '*' to return: "))
+        add_wrd = str(
+            input("Enter a new word to add to the word pool or '*' to return: ")
+        )
         new_wrd = add_wrd.lower()
         if len(new_wrd) < 3 and new_wrd != "*":
             while len(new_wrd) < 3 and new_add == True:
-                add_wrd = str(input("Enter a new word to add to the list that is longer than 3 characters or '*' to return: "))
+                add_wrd = str(
+                    input(
+                        "Enter a new word to add to the list that is longer than 3 characters or '*' to return: "
+                    )
+                )
                 new_wrd = add_wrd.lower()
                 if new_wrd == "*":
                     new_add = False
                 elif new_wrd in wrd_pl:
                     print("{0} is already in the word pool.".format(add_wrd))
-                elif len(new_wrd) >=3:
+                elif len(new_wrd) >= 3:
                     wrd_pl.append(new_wrd)
                     print(wrd_pl)
                     new_add = False
         else:
             if new_wrd in wrd_pl:
                 print("{0} is already in the word pool.".format(add_wrd))
-            elif new_wrd == '*':
+            elif new_wrd == "*":
                 new_add = False
             else:
                 wrd_pl.append(new_wrd)
                 print(wrd_pl)
                 new_add = False
 
-    print("""
+    print(
+        """
 ____________________________________________
-    """)
+    """
+    )
     return wrd_pl
 
-def main():
 
+def main():
     t_lft = 0
     Chc_pl = []
     Crct_Gss = []
@@ -250,15 +317,19 @@ def main():
     gameover = False
     cntn = True
 
-    print("""
+    print(
+        """
 ____________________________________________
-    """)
+    """
+    )
     print("Welcome to the Hangman game.\n")
     print("By: Tatenda Samudzi")
     print("[COM S 127 A]")
-    print("""
+    print(
+        """
 ____________________________________________
-    """)
+    """
+    )
 
     try:
         f = open("word_pool.txt", "x")
@@ -272,11 +343,13 @@ ____________________________________________
                 pl = pool[i].split(", ")
                 for j in range(len(pl)):
                     lp = pl[j].strip("\n")
-                    lp.strip('')
+                    lp.strip("")
                     wrd_pl.append(lp.lower())
 
     while gameover == False:
-        chc = str(input("""
+        chc = str(
+            input(
+                """
 Would you like to:
 [P]lay the game
 View the [I]nstructions
@@ -285,9 +358,18 @@ View the [W]ord pool
 [S]ave the current word pool to the word pool file
 [Q]uit
 
-Choice: """))
+Choice: """
+            )
+        )
         chc = chc.lower()
-        while chc != "p" and chc != "i" and chc != "s" and chc != "w" and chc != "a" and chc != "q":
+        while (
+            chc != "p"
+            and chc != "i"
+            and chc != "s"
+            and chc != "w"
+            and chc != "a"
+            and chc != "q"
+        ):
             chc = str(input("Try again: "))
             chc = chc.lower()
 
@@ -299,7 +381,7 @@ Choice: """))
                 t_lft = 0
                 while cntn == True:
                     num = random.randrange(0, len(wrd_pl))
-                    ran_chc = wrd_pl[num]                                                       # Chooses a random word from the word pool
+                    ran_chc = wrd_pl[num]  # Chooses a random word from the word pool
 
                     for i in range(len(ran_chc)):
                         Chc_pl.append(ran_chc[i].upper())
@@ -308,9 +390,11 @@ Choice: """))
 
                     t_lft, Crct_Gss = gameplay(t_lft, Chc_pl, Crct_Gss)
 
-                    print("""
+                    print(
+                        """
 ____________________________________________
-    """)
+    """
+                    )
                     if t_lft == 8:
                         print()
                         print("You lose!!")
@@ -319,15 +403,23 @@ ____________________________________________
                         print()
                         print(Crct_Gss)
                         print("You win!!")
-                    print("""
+                    print(
+                        """
 ____________________________________________
-    """)
+    """
+                    )
 
                     print()
-                    chc_two = input("Do you wish to try again, to add new words choose [N]o? [Y]es or [N]o: ")
+                    chc_two = input(
+                        "Do you wish to try again, to add new words choose [N]o? [Y]es or [N]o: "
+                    )
                     chc_two = chc_two.upper()
-                    while chc_two != "Y" and chc_two != "N":                                    # Immediately restart the game
-                        chc_two = input("Do you wish to try again, to add new words choose [N]o? [Y]es or [N]o: ")
+                    while (
+                        chc_two != "Y" and chc_two != "N"
+                    ):  # Immediately restart the game
+                        chc_two = input(
+                            "Do you wish to try again, to add new words choose [N]o? [Y]es or [N]o: "
+                        )
                         chc_two = chc_two.upper()
                     if chc_two == "Y":
                         Crct_Gss = []
@@ -336,39 +428,51 @@ ____________________________________________
                     elif chc_two == "N":
                         print()
                         cntn = False
-                    print("""
+                    print(
+                        """
 ____________________________________________
-    """)
+    """
+                    )
             else:
                 wrd_pl = newwrd(wrd_pl)
 
         elif chc == "i":
-            print("""
+            print(
+                """
 ____________________________________________
-    """)
-            print("""
+    """
+            )
+            print(
+                """
 To play the game you need to guess a letter and type it in
 until you complete the word but if you fail to guess correctly 8 times you lose.
 
 If you want you can add words to the [W]ord pool by choosing the option.
 Choose [S]ave to save your current word pool to a file to use next time.\n
-            """)
-            print("""
+            """
+            )
+            print(
+                """
 ____________________________________________
-    """)
+    """
+            )
 
         elif chc == "w":
-            print("""
+            print(
+                """
 ____________________________________________
-    """)
+    """
+            )
             if len(wrd_pl) == 0:
                 print("Your current word pool is empty")
             else:
                 print("These are the available words.")
             print(wrd_pl)
-            print("""
+            print(
+                """
 ____________________________________________
-    """)
+    """
+            )
 
         elif chc == "a":
             wrd_pl = newwrd(wrd_pl)
@@ -376,7 +480,7 @@ ____________________________________________
         elif chc == "s":
             with open("word_pool.txt", "w") as cp:
                 for i in range(0, len(wrd_pl)):
-                    if i != len(wrd_pl) -1:
+                    if i != len(wrd_pl) - 1:
                         wrd_pl[i] = str(wrd_pl[i]) + ", "
                     else:
                         wrd_pl[i] = str(wrd_pl[i])
@@ -387,5 +491,6 @@ ____________________________________________
             print("See you next time.")
             gameover = True
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
