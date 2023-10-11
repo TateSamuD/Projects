@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources>
+  <!--    Main app colours-->
+  <color name="TopBanner"> #1c55ce</color>
+  <color name="Background"> #bfd7ea</color>
+  <color name="NavBar"> #508ca4</color>
+  <color name="NavBar_IconBadge"> #28305c</color>
+  <color name="Cadet_gray">#91aec1</color>
+  <color name="black">#FF000000</color>
+  <color name="white">#FFFFFFFF</color>
+  <color name="Red">#8E151F</color>
+  <color name="APK_BG">#E1341E</color>
+  <color name="APK_Icon">#1ECBE1</color>
+</resources>
