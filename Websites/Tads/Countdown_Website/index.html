@@ -1,0 +1,58 @@
+<html>
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initialscale=1.0"> <!-- Add responsive meta tag -->
+<title>Countdown Timer</title>
+<style>
+/* Change font size and color as desired */
+#countdown {
+font-size: 72px;
+color: white;
+text-align: center; / Center the countdown timer /
+position: absolute; / Position the element /
+top: 50%; / Place it at the vertical center /
+left: 50%; / Place it at the horizontal center /
+transform: translate(-50%, -50%); / Move it back half its size /
+}
+</style>
+</head>
+<body>
+<div id="countdown"></div>
+<script>
+// Set the countdown date and time
+var countdownDate = "2024-06-29";
+var countdownTime = "23:59:59";
+// Calculate the remaining time
+var countdownDateTime = new Date(countdownDate + "T" +
+countdownTime + "Z");
+var countdown = setInterval(function() {
+var now = new Date().getTime();
+var distance = countdownDateTime - now;
+// Calculate days, hours, minutes, and seconds
+var days = Math.floor(distance / (1000 60 * 60 * 24));
+var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60
+60));
+var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+// Update the countdown display
+document.getElementById("countdown").innerHTML = days + "d " +
+hours + "h " + minutes + "m " + seconds + "s ";
+// Stop the countdown when the timer ends
+if (distance < 0) {
+clearInterval(countdown);
+document.getElementById("countdown").innerHTML =
+"EXPIRED";
+}
+}, 1000); // Update the countdown every second
+
+  // Function to change the font family
+          function changeFont() {
+               var fontSelector = document.getElementById("font-selector");
+               var font =
+fontSelector.options[fontSelector.selectedIndex].value;
+               document.getElementById("countdown").style.fontFamily =
+font;
+          }
+</script>
+</body>
+</html>
