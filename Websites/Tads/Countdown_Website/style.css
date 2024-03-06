@@ -1,0 +1,33 @@
+/*
+Class reference of countdown is more versatile than an id reference.
+ID's are best used for styling of specific unique elements
+*/
+.countdown {
+    flex: 20%;
+    font-size: 72px;
+    /* Change color to whatever suits your project, was turned red 
+    for easier identification of text on white background*/
+    color: rgb(190, 58, 58);
+    text-align: center;
+    /* Center the countdown timer */
+    position: absolute;
+    /* Position the element */
+    top: 50%;
+    /* Place it at the vertical center */
+    left: 50%;
+    /* Place it at the horizontal center */
+    transform: translate(-50%, -50%);
+    /* Move it back half its size */
+    display: flex;
+}
+
+/*
+For smaller screens, add any necessary elements to this segment
+for devices with screens that have a max width of 600px
+*/
+@media screen and (max-width: 600px) {
+
+    .countdown {
+        font-size: 30px;
+    }
+}
