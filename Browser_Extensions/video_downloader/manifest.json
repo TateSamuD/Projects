@@ -1,0 +1,18 @@
+{
+	"manifest_version": 3,
+	"name": "NSM Video Downloader",
+	"version": "1.0",
+	"description": "Download and convert m3u8 videos to mp4.",
+	"permissions": ["downloads", "activeTab"],
+	"host_permissions": ["*://*/*"],
+	"background":{
+		"service_worker": "background.js"
+	},
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": "img/direct-download.png"
+	},
+	"icons":{
+		"48": "img/direct-download.png"
+	}
+}
