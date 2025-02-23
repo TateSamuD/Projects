@@ -52,13 +52,13 @@ def rename_tv_show_files(show_name, year=None):
                 skipped_files.append(filename)
                 continue
 
-            season = f"s{int(season):04d}"
+            season = f"s{int(season):04d}"  # **Ensures season is four digits (s0001, s0002, etc.)**
             if "." in episode:
                 episode_number, part_num = episode.split(".")
-                episode = f"e{int(episode_number):04d}"  
+                episode = f"e{int(episode_number):04d}"  # **Ensures episode is four digits (e0001, e0002, etc.)**
                 part = f" - pt{part_num}"
             else:
-                episode = f"e{int(episode):04d}"
+                episode = f"e{int(episode):04d}"  # **Ensures episode is four digits (e0001, e0002, etc.)**
 
             base_name, file_ext = os.path.splitext(filename)
             file_ext = file_ext.lower() if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov'] else ".mp4"
