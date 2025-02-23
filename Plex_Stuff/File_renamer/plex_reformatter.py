@@ -12,18 +12,19 @@ def rename_tv_show_files(show_name, year=None):
         show_name (str): Name of the TV show.
         year (str, optional): Release year of the TV show. Defaults to None.
     """
-    # Reorder patterns so that the "Episode ..." only pattern comes first
+    # Reorder patterns so that those with explicit season info are checked first.
     patterns = [
-        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches "Episode 10" or "Episode 7.5" (no season info)
-        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5 (with potential decimals)
+        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches "Season 2 Episode 1"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... s2 - e 8
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... S02E03
+        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5
         re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2 - E08, S2-4
-        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches Season 2 Episode 1
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] Solo Leveling s2 - e 8
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(\.\d)?)", re.IGNORECASE)  # Matches [SubsPlease] Solo Leveling S02E03
+        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE)  # Matches "Episode 10" or "Episode 7.5" (no season info)
     ]
 
     current_folder = os.getcwd()
-    total_files = len([f for f in os.listdir(current_folder) if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))])
+    total_files = len([f for f in os.listdir(current_folder) 
+                       if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))])
     
     files_to_rename = []
     skipped_files = []
@@ -37,13 +38,11 @@ def rename_tv_show_files(show_name, year=None):
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    # For the "Episode ..." only pattern (first in the list),
-                    # we set season to "1" explicitly.
+                    # For the "Episode ..." only pattern, default season to "1"
                     if pattern.pattern.startswith("Episode"):
                         season = "1"
                         episode = match.group(1)
                     else:
-                        # For other patterns, assume they return at least two groups.
                         season, episode = match.group(1), match.group(2)
                     break  
 
@@ -52,7 +51,6 @@ def rename_tv_show_files(show_name, year=None):
             elif "sub" in filename.lower():
                 language = "Subbed"
 
-            # Default to Season 1 if missing
             if not season:
                 season = "1"
 
@@ -80,7 +78,6 @@ def rename_tv_show_files(show_name, year=None):
 
             old_path = os.path.join(current_folder, filename)
             new_path = os.path.join(current_folder, new_filename)
-            
             files_to_rename.append((old_path, new_path))
 
     print("\nPreview of File Renaming:\n")
