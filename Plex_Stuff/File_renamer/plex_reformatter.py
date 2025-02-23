@@ -17,7 +17,12 @@ def rename_tv_show_files(show_name, year=None):
         re.compile(r"Episode\s*(\d{1,4}(\.\d)?)\s*(?:English\s*Dubbed|Dub|Sub)?", re.IGNORECASE),  # "Episode 7.5 English Dubbed"
         re.compile(r"\b(\d{1,4}(\.\d)?)\b.*?(?:Dub|Sub|1080p|720p|480p|544p)?", re.IGNORECASE),  # "Trigun - 19 (544p)"
         re.compile(r"S?(\d{1,4})[EX]?(\d{1,4}(\.\d)?)", re.IGNORECASE),  # "S01E19" or "1x19" or "S1 - 07.5"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*(\d{1,4}(\.\d)?)\s*\(.*?\)", re.IGNORECASE)  # "[SubsPlease] Solo Leveling S1 - 07.5 (1080p)"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*(\d{1,4}(\.\d)?)\s*\(.*?\)", re.IGNORECASE),  # "[SubsPlease] Solo Leveling S1 - 07.5 (1080p)"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*s?(\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling s2 - 3 (1080p) [XXXX].mkv.mp4"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling S02E03 (1080p).mkv.mp4"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*Season\s*(\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling Season 2 - 03 (1080p).mkv.mp4"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*e\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling s2 - e 8 (1080p) [XXXX].mkv.mp4"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E(\d{1,4})", re.IGNORECASE)  # "[SubsPlease] Solo Leveling S2 - E08 (1080p).mkv.mp4"
     ]
 
     current_folder = os.getcwd()
