@@ -27,7 +27,7 @@ def rename_tv_show_files(show_name, year=None):
 
     for filename in os.listdir(current_folder):
         if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):  # Check for video files
-            season, episode, part = "01", None, ""  # Default values
+            season, episode, part, language = "0001", None, "", "Subbed"  # Default values
 
             # Try each pattern to extract Season and Episode number
             for pattern in patterns:
@@ -39,19 +39,25 @@ def rename_tv_show_files(show_name, year=None):
                         episode = match.group(1)
                     break  # Stop after first match
 
+            # Detect language (Dub or Sub)
+            if "dub" in filename.lower():
+                language = "Dubbed"
+            elif "sub" in filename.lower():
+                language = "Subbed"
+
             # If episode is still not found, skip the file
             if not episode:
                 print(f"Skipping: {filename} (No episode number detected)")
                 continue
 
             # Format Season and Episode numbers in lowercase
-            season = f"s{int(season):02d}"
+            season = f"s{int(season):04d}"
             if "." in episode:
                 episode_number, part_num = episode.split(".")
-                episode = f"e{int(episode_number):02d}"  # Format as "e01"
+                episode = f"e{int(episode_number):04d}"  # Format as "e01"
                 part = f" - pt{part_num}"  # Format as " - pt1"
             else:
-                episode = f"e{int(episode):02d}"
+                episode = f"e{int(episode):04d}"
 
             # Fix double extensions (e.g., ".mkv.mp4" → ".mp4")
             base_name, file_ext = os.path.splitext(filename)
@@ -60,11 +66,11 @@ def rename_tv_show_files(show_name, year=None):
             else:  
                 file_ext = ".mp4"  # Default to .mp4 if unknown
 
-            # New filename format: "Show Name (Year) - sXXeYY - ptZ.ext"
+            # New filename format: "Show Name (Year) [Language] - sXXXXeYYYY - ptZ.ext"
             if year:
-                new_filename = f"{show_name} ({year}) - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} ({year}) [edition-{language}] - {season}{episode}{part}{file_ext}"
             else:
-                new_filename = f"{show_name} - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} [edition-{language}] - {season}{episode}{part}{file_ext}"
 
             # Full file paths
             old_path = os.path.join(current_folder, filename)
