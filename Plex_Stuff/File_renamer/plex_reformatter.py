@@ -14,28 +14,25 @@ def rename_tv_show_files(show_name, year=None):
     """
     patterns = [
         re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # "Season 2 Episode 1"
-        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)\s*(?:English\s*Dubbed|Dub|Sub)?", re.IGNORECASE),  # "Episode 7.5 English Dubbed"
-        re.compile(r"\b(\d{1,4}(\.\d)?)\b.*?(?:Dub|Sub|1080p|720p|480p|544p)?", re.IGNORECASE),  # "Trigun - 19 (544p)"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?(\d{1,4})", re.IGNORECASE),  # "S2 - E08", "s2-4"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*e\s*(\d{1,4})", re.IGNORECASE),  # "s2 - e 8"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4})", re.IGNORECASE),  # "S02E03"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*Season\s*(\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE),  # "Season 2 - 03"
         re.compile(r"S?(\d{1,4})[EX]?(\d{1,4}(\.\d)?)", re.IGNORECASE),  # "S01E19" or "1x19" or "S1 - 07.5"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*(\d{1,4}(\.\d)?)\s*\(.*?\)", re.IGNORECASE),  # "[SubsPlease] Solo Leveling S1 - 07.5 (1080p)"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*s?(\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling s2 - 3 (1080p) [XXXX].mkv.mp4"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling S02E03 (1080p).mkv.mp4"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*Season\s*(\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling Season 2 - 03 (1080p).mkv.mp4"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*e\s*(\d{1,4})", re.IGNORECASE),  # "[SubsPlease] Solo Leveling s2 - e 8 (1080p) [XXXX].mkv.mp4"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E(\d{1,4})", re.IGNORECASE)  # "[SubsPlease] Solo Leveling S2 - E08 (1080p).mkv.mp4"
+        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE)  # "Episode 7.5 English Dubbed"
     ]
 
     current_folder = os.getcwd()
     total_files = len([f for f in os.listdir(current_folder) if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))])
-
-    files_to_rename = []  # Store preview of renaming changes
-    skipped_files = []  # Store skipped files
-
+    
+    files_to_rename = []
+    skipped_files = []
+    
     print(f"\nTotal files detected: {total_files}\n")
 
     for filename in os.listdir(current_folder):
-        if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):
-            season, episode, part, language = "0001", None, "", "Subbed"
+        if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):  
+            season, episode, part, language = None, None, "", "Subbed"
 
             for pattern in patterns:
                 match = pattern.search(filename)
@@ -44,29 +41,29 @@ def rename_tv_show_files(show_name, year=None):
                         season, episode = match.group(1), match.group(2)
                     else:
                         episode = match.group(1)
-                    break
+                    break  
 
             if "dub" in filename.lower():
                 language = "Dubbed"
             elif "sub" in filename.lower():
                 language = "Subbed"
 
-            if not episode:
+            if not episode or not season:
                 skipped_files.append(filename)
                 continue
 
             season = f"s{int(season):04d}"
             if "." in episode:
                 episode_number, part_num = episode.split(".")
-                episode = f"e{int(episode_number):04d}"
+                episode = f"e{int(episode_number):04d}"  
                 part = f" - pt{part_num}"
             else:
                 episode = f"e{int(episode):04d}"
 
             base_name, file_ext = os.path.splitext(filename)
-            if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov']:
+            if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov']:  
                 file_ext = file_ext.lower()
-            else:
+            else:  
                 file_ext = ".mp4"
 
             if year:
@@ -76,26 +73,23 @@ def rename_tv_show_files(show_name, year=None):
 
             old_path = os.path.join(current_folder, filename)
             new_path = os.path.join(current_folder, new_filename)
-
+            
             files_to_rename.append((old_path, new_path))
 
-    # Preview before renaming
     print("\n🔍 **Preview of File Renaming:**\n")
     for old, new in files_to_rename:
         print(f"📂 {os.path.basename(old)}  →  📂 {os.path.basename(new)}")
 
     if skipped_files:
-        print("\n⚠ **Files Skipped (No Episode Number Detected):**")
+        print("\n⚠ **Files Skipped (No Episode or Season Number Detected):**")
         for skipped in skipped_files:
             print(f"❌ {skipped}")
 
-    # Ask for user confirmation
     confirm = input("\nProceed with renaming? (y/n): ").strip().lower()
     if confirm != 'y':
         print("\n❌ Operation canceled. No files were renamed.")
         return
 
-    # Perform the actual renaming
     renamed_files = 0
     for old_path, new_path in files_to_rename:
         shutil.move(old_path, new_path)
