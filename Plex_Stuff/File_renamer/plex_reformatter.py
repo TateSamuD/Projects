@@ -44,17 +44,21 @@ def rename_tv_show_files(show_name, year=None):
             elif "sub" in filename.lower():
                 language = "Subbed"
 
-            if not season or not episode:
+            # **Default to Season 1 if missing**
+            if not season:
+                season = "1"
+
+            if not episode:
                 skipped_files.append(filename)
                 continue
 
-            season = f"s{int(season):02d}"
+            season = f"s{int(season):04d}"
             if "." in episode:
                 episode_number, part_num = episode.split(".")
-                episode = f"e{int(episode_number):02d}"  
+                episode = f"e{int(episode_number):04d}"  
                 part = f" - pt{part_num}"
             else:
-                episode = f"e{int(episode):02d}"
+                episode = f"e{int(episode):04d}"
 
             base_name, file_ext = os.path.splitext(filename)
             file_ext = file_ext.lower() if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov'] else ".mp4"
@@ -74,7 +78,7 @@ def rename_tv_show_files(show_name, year=None):
         print(f"{os.path.basename(old)}  →  {os.path.basename(new)}")
 
     if skipped_files:
-        print("\nFiles Skipped (No Episode or Season Number Detected):")
+        print("\nFiles Skipped (No Episode Number Detected):")
         for skipped in skipped_files:
             print(f"{skipped}")
 
