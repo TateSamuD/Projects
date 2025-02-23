@@ -13,12 +13,12 @@ def rename_tv_show_files(show_name, year=None):
         year (str, optional): Release year of the TV show. Defaults to None.
     """
     patterns = [
-        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4})", re.IGNORECASE),  # S2E5, S2-E5, S2 E5
-        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4})", re.IGNORECASE),  # S2 - E08, S2-4
-        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Season 2 Episode 1
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4})", re.IGNORECASE),  # [SubsPlease] Solo Leveling s2 - e 8
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4})", re.IGNORECASE),  # [SubsPlease] Solo Leveling S02E03
-        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE)  # Episode 7.5 English Dubbed
+        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5 (with potential decimals)
+        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2 - E08, S2-4
+        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches Season 2 Episode 1
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] Solo Leveling s2 - e 8
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] Solo Leveling S02E03
+        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE)  # Matches "Episode 12" or "Episode 7.5 English Dubbed"
     ]
 
     current_folder = os.getcwd()
@@ -30,13 +30,22 @@ def rename_tv_show_files(show_name, year=None):
     print(f"\nTotal files detected: {total_files}\n")
 
     for filename in os.listdir(current_folder):
-        if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):  
+        if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):
             season, episode, part, language = None, None, "", "Subbed"
 
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    season, episode = match.group(1), match.group(2)
+                    # For patterns that return at least two groups:
+                    if match.lastindex and match.lastindex >= 2:
+                        # If the second group is empty (as in the "Episode" only pattern), default season to "1"
+                        if match.group(2) is None or match.group(2) == "":
+                            season = "1"
+                            episode = match.group(1)
+                        else:
+                            season, episode = match.group(1), match.group(2)
+                    else:
+                        episode = match.group(1)
                     break  
 
             if "dub" in filename.lower():
@@ -44,7 +53,7 @@ def rename_tv_show_files(show_name, year=None):
             elif "sub" in filename.lower():
                 language = "Subbed"
 
-            # **Default to Season 1 if missing**
+            # Default to Season 1 if missing
             if not season:
                 season = "1"
 
@@ -52,13 +61,15 @@ def rename_tv_show_files(show_name, year=None):
                 skipped_files.append(filename)
                 continue
 
-            season = f"s{int(season):04d}"  # **Ensures season is four digits (s0001, s0002, etc.)**
+            # Format season and episode numbers in four digits
+            season = f"s{int(season):04d}"
+            # Handle decimal episode numbers (e.g., "7.5" becomes e0007 - pt5)
             if "." in episode:
                 episode_number, part_num = episode.split(".")
-                episode = f"e{int(episode_number):04d}"  # **Ensures episode is four digits (e0001, e0002, etc.)**
+                episode = f"e{int(episode_number):04d}"
                 part = f" - pt{part_num}"
             else:
-                episode = f"e{int(episode):04d}"  # **Ensures episode is four digits (e0001, e0002, etc.)**
+                episode = f"e{int(episode):04d}"
 
             base_name, file_ext = os.path.splitext(filename)
             file_ext = file_ext.lower() if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov'] else ".mp4"
@@ -98,6 +109,6 @@ def rename_tv_show_files(show_name, year=None):
 if len(sys.argv) < 2:
     print("Usage: python rename_plex_files.py '<Series Name>' [Year]")
 else:
-    series_name = sys.argv[1]  
-    series_year = sys.argv[2] if len(sys.argv) > 2 else None  
+    series_name = sys.argv[1]
+    series_year = sys.argv[2] if len(sys.argv) > 2 else None
     rename_tv_show_files(series_name, series_year)
