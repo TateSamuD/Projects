@@ -12,14 +12,14 @@ def rename_tv_show_files(show_name, year=None):
         show_name (str): Name of the TV show.
         year (str, optional): Release year of the TV show. Defaults to None.
     """
-    # Reorder patterns so that those with explicit season info are checked first.
+    # Patterns with explicit season info come first.
     patterns = [
-        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches "Season 2 Episode 1"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... s2 - e 8
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... S02E03
-        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5
-        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(\.\d)?)", re.IGNORECASE),  # Matches S2 - E08, S2-4
-        re.compile(r"Episode\s*(\d{1,4}(\.\d)?)", re.IGNORECASE)  # Matches "Episode 10" or "Episode 7.5" (no season info)
+        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches "Season 2 Episode 1"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... s2 - e 8
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... S02E03
+        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5 (with potential decimals)
+        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches S2 - E08, S2-4
+        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)  # Matches "Episode 10" or "Episode 7.5" with proper boundaries
     ]
 
     current_folder = os.getcwd()
@@ -38,8 +38,8 @@ def rename_tv_show_files(show_name, year=None):
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    # For the "Episode ..." only pattern, default season to "1"
-                    if pattern.pattern.startswith("Episode"):
+                    # If this is the "Episode ..." only pattern, default season to "1"
+                    if pattern.pattern.startswith(r"\bEpisode"):
                         season = "1"
                         episode = match.group(1)
                     else:
@@ -51,9 +51,9 @@ def rename_tv_show_files(show_name, year=None):
             elif "sub" in filename.lower():
                 language = "Subbed"
 
+            # Default to Season 1 if missing
             if not season:
                 season = "1"
-
             if not episode:
                 skipped_files.append(filename)
                 continue
@@ -78,6 +78,7 @@ def rename_tv_show_files(show_name, year=None):
 
             old_path = os.path.join(current_folder, filename)
             new_path = os.path.join(current_folder, new_filename)
+            
             files_to_rename.append((old_path, new_path))
 
     print("\nPreview of File Renaming:\n")
