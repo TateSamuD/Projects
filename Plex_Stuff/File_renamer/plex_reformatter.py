@@ -28,12 +28,13 @@ def rename_tv_show_files(show_name, year=None):
         re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
         # 7. Common "1x02" style (e.g., "1x02", "1x2", with optional decimal)
         re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 9. New pattern for bracketed prefix: e.g., "[AH] Bofuri - 01 (1080p)"
+        re.compile(r"^\[[A-Za-z0-9]+\]\s*.+?\s*-\s*(\d{1,4})(?:\s*\(.*?\))", re.IGNORECASE),
         # 8. "Episode Y" only (no season info) – default season to 1
-        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
-    ]
+        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)]
 
     current_folder = os.getcwd()
-    total_files = len([f for f in os.listdir(current_folder) 
+    total_files = len([f for f in os.listdir(current_folder)
                        if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))])
     
     files_to_rename = []
@@ -48,8 +49,12 @@ def rename_tv_show_files(show_name, year=None):
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    # For the "Episode ..." only pattern (pattern 8), default season to "1"
+                    # If this is the "Episode ..." only pattern (pattern 8), default season to "1"
                     if pattern.pattern.startswith(r"\bEpisode"):
+                        season = "1"
+                        episode = match.group(1)
+                    # If this is our new bracketed pattern (pattern 9), also default season to "1"
+                    elif pattern.pattern.startswith("^\\["):
                         season = "1"
                         episode = match.group(1)
                     else:
