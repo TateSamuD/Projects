@@ -12,19 +12,28 @@ def rename_tv_show_files(show_name, year=None):
         show_name (str): Name of the TV show.
         year (str, optional): Release year of the TV show. Defaults to None.
     """
-    # Reordered patterns: those with explicit season info come first.
+    # New and reordered patterns for various naming formats:
     patterns = [
-        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches "Season 2 Episode 1"
-        re.compile(r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE),       # Matches "s1 Episode 2"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches [SubsPlease] ... s2 - e 8
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE),           # Matches [SubsPlease] ... S02E03
-        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),  # Matches S2E5, S2-E5, S2 E5 (with potential decimals)
-        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE),       # Matches S2 - E08, S2-4
-        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)              # Matches "Episode 10" or "Episode 7.5" (no season info)
+        # 1. Explicit "Season X Episode Y"
+        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 2. "sX Episode Y" (e.g., "s1 Episode 2")
+        re.compile(r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 3. SubsPlease format: "[SubsPlease] ... sX - e Y" 
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 4. SubsPlease compact format: "[SubsPlease] ... SXXEYY"
+        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 5. General S/E format: "S2E5", "S2-E5", "S2 E5" (with potential decimals)
+        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 6. Alternative S - E format: "S2 - E08" or "S2-4"
+        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 7. Common "1x02" style (e.g., "1x02", "1x2", with optional decimal)
+        re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
+        # 8. "Episode Y" only (no season info) – default season to 1
+        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
     ]
 
     current_folder = os.getcwd()
-    total_files = len([f for f in os.listdir(current_folder)
+    total_files = len([f for f in os.listdir(current_folder) 
                        if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))])
     
     files_to_rename = []
@@ -39,7 +48,7 @@ def rename_tv_show_files(show_name, year=None):
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    # If this is the "Episode ..." only pattern, default season to "1"
+                    # For the "Episode ..." only pattern (pattern 8), default season to "1"
                     if pattern.pattern.startswith(r"\bEpisode"):
                         season = "1"
                         episode = match.group(1)
@@ -61,6 +70,7 @@ def rename_tv_show_files(show_name, year=None):
 
             # Format season and episode numbers in four digits
             season = f"s{int(season):04d}"
+            # Handle decimal episode numbers (e.g., "7.5" becomes e0007 - pt5)
             if "." in episode:
                 episode_number, part_num = episode.split(".")
                 episode = f"e{int(episode_number):04d}"
