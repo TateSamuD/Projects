@@ -3,28 +3,26 @@ import re
 import shutil
 import sys
 
+
 def rename_tv_show_files(show_name, year=None):
     """
     Renames TV show files in the current directory to follow Plex's naming convention.
-    It first displays a preview of the changes before renaming the files.
-    
+
     Plex Naming Format:
         Show Name (Year) - sXXXXeYYYY [edition-Language].ext
 
     Supported Naming Formats (examples):
-        1. "Season 2 Episode 1 ..."           -> s0002e0001
-        2. "s1 Episode 2 ..."                 -> s0001e0002
-        3. "[SubsPlease] ... s2 - e 8 ..."      -> s0002e0008
-        4. "[SubsPlease] ... S02E03"            -> s0002e0003
-        5. "S2E5", "S2-E5", "S2 E5"             -> s0002e0005
-        6. "S2 - E08" or "S2-4"                -> s0002e0008 or s0002e0004
-        7. "1x02" style                        -> s0001e0002
-        8. "Episode 10 ..." (no season info)   -> defaults to season 1: s0001e0010
-        9. Bracketed format e.g. "[AH] Bofuri - 01 (1080p)" -> defaults to season 1: s0001e0001
-       10. HiAnime/Gogoanime styles           -> handled by other patterns
+        • "[AH] Dr. Stone S2 - 01 (1080p).mkv"
+            → Dr. Stone [edition-Subbed] - s0002e0001.mp4 (if Subbed)
+        • "[SubsPlease] Dr. Stone S4 - 03 (1080p) [691F8C8D].mkv"
+            → Dr. Stone [edition-Subbed] - s0004e0003.mp4
+        • "Dr Stone Season 2 Stone Wars Episode 9 English Dubbed ..."
+            → Dr Stone [edition-Dubbed] - s0002e0009.mp4
+        • "Dr Stone Season 3 New World Episode 9 English Dubbed ..."
+            → Dr Stone [edition-Dubbed] - s0003e0009.mp4
 
     Language Detection:
-        - If the filename contains "dub" (case-insensitive), it is marked as Dubbed.
+        - If the filename contains "dub" (case-insensitive), it's marked as Dubbed.
         - Otherwise, it defaults to Subbed.
 
     Args:
@@ -32,76 +30,96 @@ def rename_tv_show_files(show_name, year=None):
         year (str, optional): The release year (optional).
     """
 
-    # New pattern for files starting with a bracket (e.g. "[AH] Black Clover - 001 ...")
-    bracketed_pattern = re.compile(
+    # Pattern for bracketed filenames with explicit season (e.g., "[AH] Dr. Stone S2 - 01 (1080p)")
+    bracketed_with_season = re.compile(
+        r"^\[[A-Za-z0-9]+\]\s*.+?[Ss](\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE
+    )
+    # Pattern for bracketed filenames without an explicit season (e.g., "[A] Black Clover - 69 (1080p)")
+    bracketed_without_season = re.compile(
         r"^\[[A-Za-z0-9]+\]\s*.+?\s*-\s*(\d{1,4})", re.IGNORECASE
     )
+    # Explicit season/episode pattern allowing extra text between (e.g., "Season 2 Stone Wars Episode 9")
+    explicit_season = re.compile(
+        r"Season\s*(\d{1,4}).*?Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE
+    )
+    # "sX Episode Y" pattern (e.g., "s1 Episode 2")
+    s_episode = re.compile(
+        r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE
+    )
+    # SubsPlease formats
+    subsplease_format = re.compile(
+        r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)",
+        re.IGNORECASE,
+    )
+    subsplease_compact = re.compile(
+        r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE
+    )
+    # "Episode Y" only (defaults to season 1)
+    episode_only = re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
+    # "1x02" style (e.g., "1x02" or "1x2")
+    one_x_two = re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
+    # General S/E format (e.g., "S2E5", "S2-E5", "S2 E5")
+    general_se = re.compile(
+        r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE
+    )
+    # Alternative S - E format (e.g., "S2 - E08" or "S2-4")
+    alt_se = re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
+    # HiAnime style, if applicable (e.g., "s5_..._ep02")
+    hianime = re.compile(r"s(\d{1,4}).*?ep(\d{1,4})", re.IGNORECASE)
+    # Gogoanime style, if applicable (e.g., "s5-...episode-02")
+    gogoanime = re.compile(r"s(\d{1,4}).*?episode[-_\s]?(\d{1,4})", re.IGNORECASE)
 
-    # Define patterns in the desired order.
-    # Order Explanation:
-    #   (a) Patterns with explicit season info (e.g., "Season X Episode Y", "sX Episode Y") 
-    #   (b) SubsPlease formats
-    #   (c) The "Episode Y" only pattern – must come early to default season=1
-    #   (d) The "1x02" style
-    #   (e) More general S/E patterns
-    #   (f) HiAnime/Gogoanime styles (if applicable)
+    # Order the patterns: try the most specific first.
     patterns = [
-        # 1. Bracketed format: "[AH] Black Clover - 001 (1080p)"
-        bracketed_pattern,
-        # 2. Explicit "Season X Episode Y"
-        re.compile(r"Season\s*(\d{1,4})\s*Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 3. "sX Episode Y" (e.g., "s1 Episode 2")
-        re.compile(r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 4. SubsPlease format: "[SubsPlease] ... sX - e Y"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 5. SubsPlease compact format: "[SubsPlease] ... SXXEYY"
-        re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 6. "Episode Y" only (no season info) – default season to 1
-        re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE),
-        # 7. Common "1x02" style (e.g., "1x02" or "1x2", with optional decimal)
-        re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 8. General S/E format: "S2E5", "S2-E5", "S2 E5" (with potential decimals)
-        re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 9. Alternative S - E format: "S2 - E08" or "S2-4"
-        re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE),
-        # 10. HiAnime style: e.g., "s5_..._ep02" (if applicable)
-        re.compile(r"s(\d{1,4}).*?ep(\d{1,4})", re.IGNORECASE),
-        # 11. Gogoanime style: e.g., "s5-...episode-02"
-        re.compile(r"s(\d{1,4}).*?episode[-_\s]?(\d{1,4})", re.IGNORECASE),
+        bracketed_with_season,
+        bracketed_without_season,
+        explicit_season,
+        s_episode,
+        subsplease_format,
+        subsplease_compact,
+        episode_only,
+        one_x_two,
+        general_se,
+        alt_se,
+        hianime,
+        gogoanime,
     ]
 
-    # Get current working directory and count video files.
+    # Get current working directory and list video files.
     current_folder = os.getcwd()
-    total_files = len([
-        f for f in os.listdir(current_folder)
-        if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))
-    ])
-    
+    total_files = len(
+        [
+            f
+            for f in os.listdir(current_folder)
+            if f.endswith((".mp4", ".mkv", ".avi", ".mov"))
+        ]
+    )
+
     files_to_rename = []
     skipped_files = []
-    
+
     print(f"\nTotal files detected: {total_files}\n")
 
     for filename in os.listdir(current_folder):
-        if filename.endswith(('.mp4', '.mkv', '.avi', '.mov')):
+        if filename.endswith((".mp4", ".mkv", ".avi", ".mov")):
             season, episode, part, language = None, None, "", "Subbed"
 
             for pattern in patterns:
                 match = pattern.search(filename)
                 if match:
-                    # For the "Episode Y" only pattern (pattern 6), default season to "1"
-                    if pattern.pattern.startswith(r"\bEpisode"):
+                    # For the "Episode Y" only pattern, default season to "1"
+                    if pattern == episode_only:
                         season = "1"
                         episode = match.group(1)
-                    # For the bracketed pattern (pattern 1), also default season to "1"
-                    elif pattern == bracketed_pattern:
+                    # For the bracketed without season pattern, default season to "1"
+                    elif pattern == bracketed_without_season:
                         season = "1"
                         episode = match.group(1)
                     else:
                         season, episode = match.group(1), match.group(2)
                     break
 
-            # Detect language based on filename content.
+            # Detect language: if "dub" is present, mark as Dubbed; otherwise, Subbed.
             if "dub" in filename.lower():
                 language = "Dubbed"
             else:
@@ -114,7 +132,7 @@ def rename_tv_show_files(show_name, year=None):
                 skipped_files.append(filename)
                 continue
 
-            # Format season and episode numbers as four-digit strings.
+            # Format season and episode to four digits.
             season = f"s{int(season):04d}"
             if "." in episode:
                 episode_number, part_num = episode.split(".")
@@ -123,9 +141,13 @@ def rename_tv_show_files(show_name, year=None):
             else:
                 episode = f"e{int(episode):04d}"
 
-            # Extract file extension (ensuring it’s a valid video extension).
+            # Extract file extension.
             base_name, file_ext = os.path.splitext(filename)
-            file_ext = file_ext.lower() if file_ext.lower() in ['.mp4', '.mkv', '.avi', '.mov'] else ".mp4"
+            file_ext = (
+                file_ext.lower()
+                if file_ext.lower() in [".mp4", ".mkv", ".avi", ".mov"]
+                else ".mp4"
+            )
 
             # Construct the new filename.
             if year:
@@ -137,7 +159,7 @@ def rename_tv_show_files(show_name, year=None):
             new_path = os.path.join(current_folder, new_filename)
             files_to_rename.append((old_path, new_path))
 
-    # Display a preview of the renaming operations.
+    # Preview renaming.
     print("\nPreview of File Renaming:\n")
     for old, new in files_to_rename:
         print(f"{os.path.basename(old)}  →  {os.path.basename(new)}")
@@ -148,7 +170,7 @@ def rename_tv_show_files(show_name, year=None):
             print(f"{skipped}")
 
     confirm = input("\nProceed with renaming? (y/n): ").strip().lower()
-    if confirm != 'y':
+    if confirm != "y":
         print("\nOperation canceled. No files were renamed.")
         return
 
@@ -159,6 +181,7 @@ def rename_tv_show_files(show_name, year=None):
         print(f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}")
 
     print(f"\nRenaming complete! {renamed_files} files renamed.")
+
 
 if len(sys.argv) < 2:
     print("Usage: python rename_plex_files.py '<Series Name>' [Year]")
