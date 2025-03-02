@@ -127,13 +127,11 @@ def rename_tv_show_files(show_name, year=None):
             # Language Detection: Check for "subbed" first, then "dubbed" or "dub".
             lower_name = filename.lower()
             if "subbed" in lower_name:
-                language = "Subbed"
-            elif "dubbed" in lower_name:
-                language = "Dubbed"
-            elif "dub" in lower_name:
-                language = "Dubbed"
+                language = "Japanese"
+            elif "dubbed" in lower_name or "dub" in lower_name:
+                language = "English"
             else:
-                language = "Subbed"
+                language = "Japanese"
 
             # Default to season "1" if missing.
             if not season:
@@ -161,9 +159,9 @@ def rename_tv_show_files(show_name, year=None):
 
             # Construct new filename.
             if year:
-                new_filename = f"{show_name} ({year}) [edition-{language}] - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
             else:
-                new_filename = f"{show_name} [edition-{language}] - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
 
             old_path = os.path.join(current_folder, filename)
             new_path = os.path.join(current_folder, new_filename)
