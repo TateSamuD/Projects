@@ -14,6 +14,11 @@ document.getElementById("download").addEventListener("click", async () => {
         tab.id,
         { code: "(" + findM3U8.toString() + ")();" },
         (result) => {
+          if (chrome.runtime.lastError) {
+            console.error("Script Execution Error:", chrome.runtime.lastError);
+            status.textContent = "Error executing script.";
+            return;
+          }
           handleScriptResult(result, status);
         }
       );
@@ -24,8 +29,16 @@ document.getElementById("download").addEventListener("click", async () => {
           target: { tabId: tab.id },
           func: findM3U8,
         })
-        .then((result) => {
-          handleScriptResult(result, status);
+        .then((injectionResults) => {
+          if (
+            !injectionResults ||
+            !injectionResults[0] ||
+            !injectionResults[0].result
+          ) {
+            status.textContent = "No video found.";
+            return;
+          }
+          handleScriptResult([injectionResults[0].result], status);
         })
         .catch((error) => {
           console.error("Error executing script:", error);
@@ -33,25 +46,32 @@ document.getElementById("download").addEventListener("click", async () => {
         });
     }
   } catch (err) {
-    console.error(err);
-    status.textContent = "Error" + err.message;
+    console.error("Error:", err);
+    status.textContent = "Error: " + err.message;
   }
 });
 
+// Function to detect Firefox
 function isFirefox() {
-  return navigator.userAgent.includes("Firefox");
+  return typeof browser !== "undefined";
 }
 
+// Function to process results
 function handleScriptResult(result, status) {
-	if (result && result[0]) {
-	  const { url, title } = result[0];
-	  chrome.runtime.sendMessage({ type: "download", m3u8URL: url, title });
-	  status.textContent = "Downloading...";
-	} else {
-	  status.textContent = "No video found.";
-	}
- }
+  if (result && result[0]) {
+    const { url, title } = result[0];
+    if (!url) {
+      status.textContent = "No video found.";
+      return;
+    }
+    chrome.runtime.sendMessage({ type: "download", m3u8URL: url, title });
+    status.textContent = "Downloading...";
+  } else {
+    status.textContent = "No video found.";
+  }
+}
 
+// Function to find m3u8 videos
 function findM3U8() {
   const videos = Array.from(document.querySelectorAll("video, source"));
   for (const video of videos) {
@@ -59,5 +79,5 @@ function findM3U8() {
       return { url: video.src, title: document.title || "video" };
     }
   }
-  return null;
+  return { url: null, title: null };
 }
