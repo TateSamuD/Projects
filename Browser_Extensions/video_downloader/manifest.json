@@ -25,12 +25,10 @@
 	"content_security_policy": {
 		"script-src": [
 			"'self'",
-			"'unsafe-eval'",
-			"https://cdn.jsdelivr.net"
+			"'unsafe-eval'"
 		],
 		"script-src-elem": [
-			"'self'",
-			"https://cdn.jsdelivr.net"
+			"'self'"
 		],
 		"object-src": [
 			"'self'"
