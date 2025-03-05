@@ -8,22 +8,8 @@ document.getElementById("download").addEventListener("click", async () => {
       currentWindow: true,
     });
 
-    if (isFirefox()) {
-      // Firefox-compatible script execution (Manifest V2)
-      chrome.tabs.executeScript(
-        tab.id,
-        { code: "(" + findM3U8.toString() + ")();" },
-        (result) => {
-          if (chrome.runtime.lastError) {
-            console.error("Script Execution Error:", chrome.runtime.lastError);
-            status.textContent = "Error executing script.";
-            return;
-          }
-          handleScriptResult(result, status);
-        }
-      );
-    } else {
-      // Chrome/Edge-compatible script execution (Manifest V3)
+    if (typeof chrome.scripting !== "undefined") {
+      // Chrome (Manifest V3)
       chrome.scripting
         .executeScript({
           target: { tabId: tab.id },
@@ -44,17 +30,16 @@ document.getElementById("download").addEventListener("click", async () => {
           console.error("Error executing script:", error);
           status.textContent = "Error: " + error.message;
         });
+    } else {
+      // If `chrome.scripting` is undefined, show error
+      console.error("chrome.scripting API is not available.");
+      status.textContent = "Error: chrome.scripting API not supported.";
     }
   } catch (err) {
     console.error("Error:", err);
     status.textContent = "Error: " + err.message;
   }
 });
-
-// Function to detect Firefox
-function isFirefox() {
-  return typeof browser !== "undefined";
-}
 
 // Function to process results
 function handleScriptResult(result, status) {
