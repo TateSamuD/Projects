@@ -1,6 +1,6 @@
 document.getElementById("download").addEventListener("click", async () => {
   const status = document.getElementById("status");
-  status.textContent = "Downloading...";
+  status.textContent = "Searching for video...";
   try {
     const [tab] = await chrome.tabs.query({
       active: true,
@@ -8,13 +8,13 @@ document.getElementById("download").addEventListener("click", async () => {
     });
     chrome.scripting.executeScript(
       {
-        target: { tabID: tab.id },
-        function: findM3U8,
+        target: { tabId: tab.id },
+        func: findM3U8,
       },
       async (result) => {
         if (result && result[0]?.result) {
-          const m3u8URL = result[0].result;
-          await chrome.runtime.sendMessage({ type: "download", m3u8URL });
+          const {url, title} = result[0].result;
+          await chrome.runtime.sendMessage({ type: "download", m3u8URL: url, title });
           status.textContent = "Downloading";
         } else {
           status.textContent = "No video found";
@@ -30,8 +30,8 @@ document.getElementById("download").addEventListener("click", async () => {
 function findM3U8() {
   const videos = Array.from(document.querySelectorAll("video, source"));
   for (const video of videos) {
-    if (video.scroll.endsWith(".m3u8")) {
-      return video.src;
+    if (video.src && video.src.endsWith(".m3u8")) {
+      return {url: video.src, title: document.title || "video"};
     }
   }
   return null;

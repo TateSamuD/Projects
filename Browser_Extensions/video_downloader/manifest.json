@@ -3,7 +3,7 @@
 	"name": "NSM Video Downloader",
 	"version": "1.0",
 	"description": "Download and convert m3u8 videos to mp4.",
-	"permissions": ["downloads", "activeTab"],
+	"permissions": ["downloads", "activeTab", "scripting", "storage"],
 	"host_permissions": ["*://*/*"],
 	"background":{
 		"service_worker": "background.js"
