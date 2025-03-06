@@ -159,9 +159,9 @@ def rename_tv_show_files(show_name, year=None):
 
             # Construct new filename.
             if year:
-                new_filename = f"{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} ({year}) [language-{language}]/{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
             else:
-                new_filename = f"{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
+                new_filename = f"{show_name} [language-{language}]/{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
 
             old_path = os.path.join(current_folder, filename)
             new_path = os.path.join(current_folder, new_filename)
