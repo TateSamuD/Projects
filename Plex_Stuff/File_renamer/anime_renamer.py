@@ -159,12 +159,19 @@ def rename_tv_show_files(show_name, year=None):
 
             # Construct new filename.
             if year:
-                new_filename = f"{show_name} ({year}) [language-{language}]/{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
+                target_folder = f"{show_name} ({year}) [language-{language}]"
+                new_filename = f"{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
             else:
-                new_filename = f"{show_name} [language-{language}]/{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
+                target_folder = f"{show_name} [language-{language}]"
+                new_filename = f"{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
+
+            # Create target folder if it doesn't exist.
+            target_folder_path = os.path.join(current_folder, target_folder)
+            if not os.path.exists(target_folder_path):
+                os.makedirs(target_folder_path, exist_ok=True)
 
             old_path = os.path.join(current_folder, filename)
-            new_path = os.path.join(current_folder, new_filename)
+            new_path = os.path.join(target_folder_path, new_filename)
             files_to_rename.append((old_path, new_path))
 
     # Display preview.
