@@ -34,6 +34,9 @@ def rename_tv_show_files(show_name, year=None):
         year (str, optional): The release year (optional).
     """
 
+    # Patterns for detecting OVA episodes (case-insensitive).
+    ova_pattern = re.compile(r"\bOVA\b", re.IGNORECASE)
+
     # Pattern for bracketed filenames with season info (e.g., "[AH] Dr. Stone S2 - 01 (1080p)")
     bracketed_with_season = re.compile(
         r"^\[[A-Za-z0-9]+\]\s*.+?[Ss](\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE
@@ -149,6 +152,11 @@ def rename_tv_show_files(show_name, year=None):
             else:
                 episode = f"e{int(episode):04d}"
 
+            # Check if the episode is an OVA.
+            ova_tag = ""
+            if ova_pattern.search(filename):
+                ova_tag = " [ova]"
+
             # Extract file extension.
             base_name, file_ext = os.path.splitext(filename)
             file_ext = (
@@ -157,12 +165,19 @@ def rename_tv_show_files(show_name, year=None):
                 else ".mp4"
             )
 
+            # Construct folder name.
+            if ova_tag:
+                target_folder = f"Special"
+            else:
+                if year:
+                    target_folder = f"{show_name} ({year}) [language-{language}]"
+                else:
+                    target_folder = f"{show_name} [language-{language}]"
+
             # Construct new filename.
             if year:
-                target_folder = f"{show_name} ({year}) [language-{language}]"
                 new_filename = f"{show_name} ({year}) [language-{language}] - {season}{episode}{part}{file_ext}"
             else:
-                target_folder = f"{show_name} [language-{language}]"
                 new_filename = f"{show_name} [language-{language}] - {season}{episode}{part}{file_ext}"
 
             # Create target folder if it doesn't exist.
