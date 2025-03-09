@@ -63,6 +63,8 @@ def rename_tv_show_files(show_name, year=None):
     )
     # "Episode Y" only (no season info) – default season to 1
     episode_only = re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
+    ep_only = re.compile(r"\bep\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
+    e_only = re.compile(r"\be\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
     # "1x02" style (e.g., "1x02" or "1x2", with optional decimal)
     one_x_two = re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
     # General S/E format (e.g., "S2E5", "S2-E5", "S2 E5")
@@ -85,6 +87,8 @@ def rename_tv_show_files(show_name, year=None):
         subsplease_format,
         subsplease_compact,
         episode_only,
+        ep_only,
+        e_only,
         one_x_two,
         general_se,
         alt_se,
