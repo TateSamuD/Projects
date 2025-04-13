@@ -73,9 +73,14 @@ def rename_tv_show_files(show_name, year=None):
     hianime = re.compile(r"s(\d{1,4}).*?ep(\d{1,4})", re.IGNORECASE)
     # Gogoanime style.
     gogoanime = re.compile(r"s(\d{1,4}).*?episode[-_\s]?(\d{1,4})", re.IGNORECASE)
+    
+    # Plex naming pattern - for renaming files in Plex.
+	 # This pattern captures the show name, year, language, season, episode, and part.
+    plex_pattern = re.compile(r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})", re.IGNORECASE)
 
     # Order patterns: most specific first.
     patterns = [
+        plex_pattern,
         bracketed_with_season,
         bracketed_without_season,
         explicit_season,
@@ -143,10 +148,10 @@ def rename_tv_show_files(show_name, year=None):
 
             # Format season and episode as four-digit strings.
             season = f"s{int(season):04d}"
-            if "." in episode:
+            if "." in episode or "- pt" in episode:
                 episode_number, part_num = episode.split(".")
                 episode = f"e{int(episode_number):04d}"
-                part = f" - pt{part_num}"
+                part = f" - pt{int(part_num):04d}"
             else:
                 episode = f"e{int(episode):04d}"
 
