@@ -128,9 +128,9 @@ def rename_tv_show_files(show_name, year=None):
 
             # Language detection: prioritize "subbed" over "dubbed".
             lower_name = filename.lower()
-            if "subbed" in lower_name:
+            if "subbed" in lower_name or "language-Japanese" in lower_name or "edition-Subbed" in lower_name:
                 language = "Japanese"
-            elif "dubbed" in lower_name or "dub" in lower_name:
+            elif "dubbed" in lower_name or "dub" in lower_name or "language-English" in lower_name or "edition-Dubbed" in lower_name:
                 language = "English"
             else:
                 language = "Japanese"
@@ -168,15 +168,15 @@ def rename_tv_show_files(show_name, year=None):
                 target_folder = "Special"
             else:
                 if year:
-                    target_folder = f"{show_name} ({year}) [language-{language}]"
+                    target_folder = f"{show_name} ({year}) {{language-{language}}}"
                 else:
-                    target_folder = f"{show_name} [language-{language}]"
+                    target_folder = f"{show_name} {{language-{language}}}"
 
             # Construct new filename.
             if year:
-                new_filename = f"{show_name} ({year}) [language-{language}] - {season}{episode}{part}{ova_tag}{file_ext}"
+                new_filename = f"{show_name} ({year}) {{[language-{language}}} - {season}{episode}{part}{ova_tag}{file_ext}"
             else:
-                new_filename = f"{show_name} [language-{language}] - {season}{episode}{part}{ova_tag}{file_ext}"
+                new_filename = f"{show_name} {{language-{language}}} - {season}{episode}{part}{ova_tag}{file_ext}"
 
             # Create target folder if it doesn't exist.
             target_folder_path = os.path.join(current_folder, target_folder)
