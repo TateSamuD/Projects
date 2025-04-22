@@ -73,14 +73,27 @@ def rename_tv_show_files(show_name, year=None):
     hianime = re.compile(r"s(\d{1,4}).*?ep(\d{1,4})", re.IGNORECASE)
     # Gogoanime style.
     gogoanime = re.compile(r"s(\d{1,4}).*?episode[-_\s]?(\d{1,4})", re.IGNORECASE)
-    
+
     # Plex naming pattern - for renaming files in Plex.
-	 # This pattern captures the show name, year, language, season, episode, and part.
-    plex_pattern = re.compile(r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})", re.IGNORECASE)
+    # This pattern captures the show name, year, language, season, episode, and part.
+    old_plex_pattern = re.compile(
+        r"^(.+?)\s*\((\d{4})\)\s*\[language-(.+?)\]\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",
+        re.IGNORECASE,
+    )
+    plex_pattern = re.compile(
+        r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})",
+        re.IGNORECASE,
+    )
+    plex_pattern_part = re.compile(
+        r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",
+        re.IGNORECASE,
+    )
 
     # Order patterns: most specific first.
     patterns = [
+        old_plex_pattern,
         plex_pattern,
+        plex_pattern_part,
         bracketed_with_season,
         bracketed_without_season,
         explicit_season,
@@ -133,9 +146,18 @@ def rename_tv_show_files(show_name, year=None):
 
             # Language detection: prioritize "subbed" over "dubbed".
             lower_name = filename.lower()
-            if "subbed" in lower_name or "language-Japanese" in lower_name or "edition-Subbed" in lower_name:
+            if (
+                "subbed" in lower_name
+                or "[language-japanese]" in lower_name
+                or "edition-subbed" in lower_name
+            ):
                 language = "Japanese"
-            elif "dubbed" in lower_name or "dub" in lower_name or "language-English" in lower_name or "edition-Dubbed" in lower_name:
+            elif (
+                "dubbed" in lower_name
+                or "dub" in lower_name
+                or "[language-english]" in lower_name
+                or "edition-dubbed" in lower_name
+            ):
                 language = "English"
             else:
                 language = "Japanese"
@@ -179,7 +201,7 @@ def rename_tv_show_files(show_name, year=None):
 
             # Construct new filename.
             if year:
-                new_filename = f"{show_name} ({year}) {{[language-{language}}} - {season}{episode}{part}{ova_tag}{file_ext}"
+                new_filename = f"{show_name} ({year}) {{language-{language}}} - {season}{episode}{part}{ova_tag}{file_ext}"
             else:
                 new_filename = f"{show_name} {{language-{language}}} - {season}{episode}{part}{ova_tag}{file_ext}"
 
@@ -221,3 +243,11 @@ else:
     series_name = sys.argv[1]
     series_year = sys.argv[2] if len(sys.argv) > 2 else None
     rename_tv_show_files(series_name, series_year)
+
+
+# # Debug mode
+# if __name__ == "__main__":
+#    test_name = "Debug Show"
+#    test_year = "0001"
+#    rename_tv_show_files(test_name, test_year)
+# # Debug mode
