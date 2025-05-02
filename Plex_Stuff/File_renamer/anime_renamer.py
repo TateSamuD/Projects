@@ -2,6 +2,10 @@ import os
 import re
 import shutil
 import sys
+import json
+import subprocess
+
+from tqdm import tqdm
 
 
 def rename_tv_show_files(show_name, year=None):
@@ -37,25 +41,12 @@ def rename_tv_show_files(show_name, year=None):
     ova_pattern = re.compile(r"\bOVA\b", re.IGNORECASE)
 
     # Define regex patterns for various naming conventions.
-    bracketed_with_season = re.compile(
-        r"^\[[A-Za-z0-9]+\]\s*.+?[Ss](\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE
-    )
-    bracketed_without_season = re.compile(
-        r"^\[[A-Za-z0-9]+\]\s*.+?\s*-\s*(\d{1,4})", re.IGNORECASE
-    )
-    explicit_season = re.compile(
-        r"Season\s*(\d{1,4}).*?Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE
-    )
-    s_episode = re.compile(
-        r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE
-    )
-    subsplease_format = re.compile(
-        r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)",
-        re.IGNORECASE,
-    )
-    subsplease_compact = re.compile(
-        r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE
-    )
+    bracketed_with_season = re.compile(r"^\[[A-Za-z0-9]+\]\s*.+?[Ss](\d{1,4})\s*-\s*(\d{1,4})", re.IGNORECASE)
+    bracketed_without_season = re.compile(r"^\[[A-Za-z0-9]+\]\s*.+?\s*-\s*(\d{1,4})", re.IGNORECASE)
+    explicit_season = re.compile(r"Season\s*(\d{1,4}).*?Episode\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
+    s_episode = re.compile(r"[Ss](\d{1,4})\s+Episode\s+(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
+    subsplease_format = re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})\s*-\s*E?\s*(\d{1,4}(?:\.\d)?)",re.IGNORECASE)
+    subsplease_compact = re.compile(r"\[SubsPlease\]\s*.+?\s*S?(\d{1,4})E(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
     # "Episode Y" only (no season info) – default season to 1.
     episode_only = re.compile(r"\bEpisode\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
     ep_only = re.compile(r"\bep\s+(\d{1,4}(?:\.\d)?)\b", re.IGNORECASE)
@@ -64,9 +55,7 @@ def rename_tv_show_files(show_name, year=None):
     # "1x02" style (e.g., "1x02" or "1x2")
     one_x_two = re.compile(r"(\d{1,2})x(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
     # General S/E format.
-    general_se = re.compile(
-        r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE
-    )
+    general_se = re.compile(r"S?(\d{1,4})\s*[EeXx-]?\s*(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
     # Alternative S - E format.
     alt_se = re.compile(r"\bS?(\d{1,4})\s*-\s*E?(\d{1,4}(?:\.\d)?)", re.IGNORECASE)
     # HiAnime style.
@@ -76,18 +65,9 @@ def rename_tv_show_files(show_name, year=None):
 
     # Plex naming pattern - for renaming files in Plex.
     # This pattern captures the show name, year, language, season, episode, and part.
-    old_plex_pattern = re.compile(
-        r"^(.+?)\s*\((\d{4})\)\s*\[language-(.+?)\]\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",
-        re.IGNORECASE,
-    )
-    plex_pattern = re.compile(
-        r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})",
-        re.IGNORECASE,
-    )
-    plex_pattern_part = re.compile(
-        r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",
-        re.IGNORECASE,
-    )
+    old_plex_pattern = re.compile(r"^(.+?)\s*\((\d{4})\)\s*\[language-(.+?)\]\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",re.IGNORECASE)
+    plex_pattern = re.compile(r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})",re.IGNORECASE)
+    plex_pattern_part = re.compile(r"^(.+?)\s*\((\d{4})\)\s*\{language-(.+?)\}\s*-\s*s(\d{1,4})e(\d{1,4})\s*-\s*pt(\d{1,4})",re.IGNORECASE)
 
     # Order patterns: most specific first.
     patterns = [
@@ -129,38 +109,9 @@ def rename_tv_show_files(show_name, year=None):
         if filename.endswith((".mp4", ".mkv", ".avi", ".mov")):
             season, episode, part, language = None, None, "", "Subbed"
 
-            for pattern in patterns:
-                match = pattern.search(filename)
-                if match:
-                    # For "Episode ..." or "ep ..." or "e..." only patterns, default season to "1".
-                    if pattern in [episode_only, ep_only, e_only]:
-                        season = "1"
-                        episode = match.group(1)
-                    # For bracketed without season pattern, default season to "1".
-                    elif pattern == bracketed_without_season:
-                        season = "1"
-                        episode = match.group(1)
-                    else:
-                        season, episode = match.group(1), match.group(2)
-                    break
+            season, episode = extract_season_episode(bracketed_without_season, episode_only, ep_only, e_only, patterns, filename)
 
-            # Language detection: prioritize "subbed" over "dubbed".
-            lower_name = filename.lower()
-            if (
-                "subbed" in lower_name
-                or "[language-japanese]" in lower_name
-                or "edition-subbed" in lower_name
-            ):
-                language = "Japanese"
-            elif (
-                "dubbed" in lower_name
-                or "dub" in lower_name
-                or "[language-english]" in lower_name
-                or "edition-dubbed" in lower_name
-            ):
-                language = "English"
-            else:
-                language = "Japanese"
+            language = detect_language(filename)
 
             if not season:
                 season = "1"
@@ -229,12 +180,95 @@ def rename_tv_show_files(show_name, year=None):
         return
 
     renamed_files = 0
-    for old_path, new_path in files_to_rename:
+    renamed_log = []
+    #  for old_path, new_path in files_to_rename:
+    #      shutil.move(old_path, new_path)
+    #      renamed_files += 1
+    #      print(f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}")
+
+    #  print(f"\nRenaming complete! {renamed_files} files renamed.")
+    for old_path, new_path in tqdm(files_to_rename, desc="Renaming files", unit="file"):
         shutil.move(old_path, new_path)
         renamed_files += 1
-        print(f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}")
+        renamed_log.append(
+            f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}"
+        )
 
     print(f"\nRenaming complete! {renamed_files} files renamed.")
+
+    print("\nRenaming Log:")
+    for log_line in renamed_log:
+        print(f"{log_line}")
+
+def extract_season_episode(bracketed_without_season, episode_only, ep_only, e_only, patterns, filename):
+    for pattern in patterns:
+        match = pattern.search(filename)
+        if match:
+                    # For "Episode ..." or "ep ..." or "e..." only patterns, default season to "1".
+            if pattern in [episode_only, ep_only, e_only]:
+                season = "1"
+                episode = match.group(1)
+                    # For bracketed without season pattern, default season to "1".
+            elif pattern == bracketed_without_season:
+                season = "1"
+                episode = match.group(1)
+            else:
+                season, episode = match.group(1), match.group(2)
+            break
+    return season,episode
+
+def detect_language(filename):
+    try:
+        result = subprocess.run(
+                    [
+                        "ffprobe",
+                        "-v",
+                        "quiet",
+                        "-print_format",
+                        "json",
+                        "-show_streams",
+                        "-select_streams",
+                        "a",
+                        filename,
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+        metadata = json.loads(result.stdout)
+        for stream in metadata.get("streams", []):
+            lang_tag = stream.get("tags", {}).get("language")
+            if lang_tag:
+                lang_tag = lang_tag.lower()
+                if lang_tag.startswith("und"):
+                   pass
+                elif lang_tag.startswith("jpn") or lang_tag.startswith("ja"):
+                    language = "Japanese"
+                elif lang_tag.startswith("eng") or lang_tag.startswith("en"):
+                    language = "English"
+    except Exception as e:
+        print(f"Error reading metadata for {filename}: {e}")
+
+            # Language detection: prioritize "subbed" over "dubbed".
+    lower_name = filename.lower()
+    if (
+                "subbed" in lower_name
+                or "[language-japanese]" in lower_name
+                or "{language-japanese}" in lower_name
+                or "edition-subbed" in lower_name
+            ):
+        language = "Japanese"
+    elif (
+                "dubbed" in lower_name
+                or "dub" in lower_name
+                or "[language-english]" in lower_name
+                or "{language-english}" in lower_name
+                or "edition-dubbed" in lower_name
+            ):
+        language = "English"
+    else:
+        language = "Japanese"
+    return language
 
 
 if len(sys.argv) < 2:
