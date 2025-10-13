@@ -8,7 +8,7 @@ import subprocess
 from tqdm import tqdm
 
 
-def rename_tv_show_files(show_name, year=None):
+def rename_tv_show_files(show_name, year=None, lang=None):
     """
     Renames TV show files in the current directory to follow Plex's naming convention
     and moves them into a designated folder. The naming convention is:
@@ -35,6 +35,7 @@ def rename_tv_show_files(show_name, year=None):
     Args:
         show_name (str): The name of the TV show.
         year (str, optional): The release year (optional).
+        lang (str, optional): The language of the show (optional).
     """
 
     # Regex for OVA detection.
@@ -130,9 +131,10 @@ def rename_tv_show_files(show_name, year=None):
     print(f"\nTotal files detected: {total_files}\n")
 
     video_files = [
-		 f for f in os.listdir(current_folder)
-		 if f.endswith((".mp4", ".mkv", ".avi", ".mov"))
-	 ]
+        f
+        for f in os.listdir(current_folder)
+        if f.endswith((".mp4", ".mkv", ".avi", ".mov"))
+    ]
 
     for filename in tqdm(video_files, desc="Processing files", unit="file"):
         if filename.endswith((".mp4", ".mkv", ".avi", ".mov")):
@@ -147,10 +149,17 @@ def rename_tv_show_files(show_name, year=None):
                 filename,
             )
 
-            language = detect_language(filename)
+            # If user set a language, use it; otherwise, detect from filename.
+            if lang and lang.lower() not in ["na", "none"]:
+                language = user_set_language(lang)
+            else:
+                language = detect_language(filename)
 
+            # Default season to 1 if not found.
             if not season:
                 season = "1"
+
+            # Skip files without an episode number.
             if not episode:
                 skipped_files.append(filename)
                 continue
@@ -220,19 +229,20 @@ def rename_tv_show_files(show_name, year=None):
     for old_path, new_path in files_to_rename:
         shutil.move(old_path, new_path)
         renamed_files += 1
-    #      print(f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}")
-   #  for old_path, new_path in tqdm(files_to_rename, desc="Renaming files", unit="file"):
-   #      shutil.move(old_path, new_path)
-   #      renamed_files += 1
+        #      print(f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}")
+        #  for old_path, new_path in tqdm(files_to_rename, desc="Renaming files", unit="file"):
+        #      shutil.move(old_path, new_path)
+        #      renamed_files += 1
         renamed_log.append(
             f"Renamed: {os.path.basename(old_path)} → {os.path.basename(new_path)}"
         )
 
     print(f"\nRenaming complete! {renamed_files} files renamed.")
 
-   #  print("\nRenaming Log:")
-   #  for log_line in renamed_log:
-   #      print(f"{log_line}")
+
+#  print("\nRenaming Log:")
+#  for log_line in renamed_log:
+#      print(f"{log_line}")
 
 
 def extract_season_episode(
@@ -255,7 +265,14 @@ def extract_season_episode(
             break
     return season, episode
 
+
 def detect_language(filename):
+    """
+    Detects the language of the show based on filename patterns and metadata.
+    Args:
+        filename (str): The name of the file.
+    """
+
     try:
         result = subprocess.run(
             [
@@ -309,12 +326,32 @@ def detect_language(filename):
     return language
 
 
+def user_set_language(lang):
+    """Sets the language based on user input.
+    Args:
+        lang (str): The language input by the user."""
+    if lang.lower() in ["japanese", "jpn", "ja"]:
+        return "Japanese"
+    elif lang.lower() in ["english", "eng", "en"]:
+        return "English"
+    elif lang.lower() in ["spanish", "spa", "es"]:
+        return "Spanish"
+    return lang
+
+
 if len(sys.argv) < 2:
-    print("Usage: python rename_plex_files.py '<Series Name>' [Year]")
+    print(
+        "Usage: python rename_plex_files.py '<Series Name>' [Year] [Language]\nIf Year or Language is not applicable, use 'NA' or 'None'."
+    )
 else:
     series_name = sys.argv[1]
     series_year = sys.argv[2] if len(sys.argv) > 2 else None
-    rename_tv_show_files(series_name, series_year)
+    if (sys.argv[2].lower() == "na") or (sys.argv[2].lower() == "none"):
+        series_year = None
+    series_lang = sys.argv[3] if len(sys.argv) > 3 else None
+    if (sys.argv[3].lower() == "na") or (sys.argv[3].lower() == "none"):
+        series_lang = None
+    rename_tv_show_files(series_name, series_year, series_lang)
 
 
 # # Debug mode
