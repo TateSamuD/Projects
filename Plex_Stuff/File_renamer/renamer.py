@@ -9,7 +9,9 @@ def rename_files(show_name):
 	rip_pattern_1 = re.compile(r'(s\d{1,2}e\d{1,2})', re.IGNORECASE) # Pattern to match S01E01
 	rip_pattern_2 = re.compile(r'(\d{1,2}x\d{1,2})', re.IGNORECASE) # Pattern to match 1x01
 
-	patterns = [rip_pattern_0, rip_pattern_1, rip_pattern_2]
+	plex_pattern = re.compile(r'(s\d{1,4}[-]e\d{1,4})', re.IGNORECASE) # Pattern to match S01-E01 with 4 digit support
+
+	patterns = [rip_pattern_0, rip_pattern_1, rip_pattern_2, plex_pattern]
 	# Strip sanitise and organise video files
 	current_folder = os.getcwd()
 	total_files = len(
@@ -35,6 +37,10 @@ def rename_files(show_name):
 
 			season, episode = extract_season_episode(filename, patterns)
 
+			ova_tag = ""
+			if re.search(r'\bOVA\b', filename, re.IGNORECASE):
+				ova_tag = " [OVA]"
+
 			if not season:
 				season = "1"
 
@@ -44,10 +50,6 @@ def rename_files(show_name):
 
 			season = f"s{int(season):04d}"
 			episode = f"e{int(episode):04d}"
-
-			ova_tag = ""
-			if re.search(r'\bOVA\b', filename, re.IGNORECASE):
-				ova_tag = " [OVA]"
 
 			base_name, base_ext = os.path.splitext(filename)
 			base_ext = (
@@ -87,7 +89,7 @@ def rename_files(show_name):
 		shutil.move(old_path, new_path)
 		renamed_files += 1
 		# f"Renamed: {os.path.basename(old_path)} \n\t\t--> {os.path.basename(new_path)}")
-	
+
 	print(f"\nRenaming completed. {renamed_files} files were renamed.")
   # Input a folder with video files
 
