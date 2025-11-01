@@ -39,7 +39,7 @@ def rename_files(show_name):
 
 			ova_tag = ""
 			if re.search(r'\bOVA\b', filename, re.IGNORECASE):
-				ova_tag = " [OVA]"
+				ova_tag = "_[OVA]"
 
 			if not season:
 				season = "1"
@@ -63,7 +63,7 @@ def rename_files(show_name):
 			else:
 				target_folder = f"{show_name}"
 
-			new_filename = f"{show_name} - {season}{episode}{ova_tag}{base_ext}"
+			new_filename = f"{show_name}_-_{season}{episode}{ova_tag}{base_ext}"
 
 			target_folder_path = os.path.join(current_folder, target_folder)
 			if not os.path.exists(target_folder_path):
@@ -113,5 +113,14 @@ def extract_season_episode(filename, patterns):
 	return season, episode
 
 if __name__ == "__main__":
+	print("""
+
+			Plex Tv-Show Renamer
+
+			Expected file format examples:
+			- ShowName_S01E01.mp4
+			- Show.Name.S01.E01.mp4
+			- Show-Name-1x01.mp4
+			""")
 	name = input("Enter the name of the show: ")
 	rename_files(name)
