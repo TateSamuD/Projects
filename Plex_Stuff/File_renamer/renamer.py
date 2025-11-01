@@ -77,7 +77,7 @@ def rename_files(show_name):
 	print(f"Total files to rename: {len(files_to_rename)}")
 	print("\nPreview of Files to be Renamed:")
 	for old_path, new_path in files_to_rename:
-		print(f"{os.path.basename(old_path)}  \n\t\t-->  {os.path.basename(new_path)}")
+		print(f"<--{os.path.basename(old_path)}\n-->{os.path.basename(new_path)}")
 
 	confirm = input("\nDo you want to proceed with renaming? (yes/no): ").strip().lower()
 	if confirm != 'yes':
