@@ -8,10 +8,11 @@ def rename_files(show_name):
 	rip_pattern_0 = re.compile(r'(s\d{1,2}[\s._-]e\d{1,2})', re.IGNORECASE) # Pattern to match S01_E01, S01-E01, S01.E01
 	rip_pattern_1 = re.compile(r'(s\d{1,2}e\d{1,2})', re.IGNORECASE) # Pattern to match S01E01
 	rip_pattern_2 = re.compile(r'(\d{1,2}x\d{1,2})', re.IGNORECASE) # Pattern to match 1x01
+	rip_pattern_3 = re.compile(r'(season[\s._-]?(\d{1,4})[\s._-]?episode[\s._-]?(\d{1,4}))', re.IGNORECASE) # Pattern to match season 01 episode 01
 
-	plex_pattern = re.compile(r'(s\d{1,4}[-]e\d{1,4})', re.IGNORECASE) # Pattern to match S01-E01 with 4 digit support
+	plex_pattern = re.compile(r's(\d{1,4})e(\d{1,4})', re.IGNORECASE) # Pattern to match - s0001e0001
 
-	patterns = [rip_pattern_0, rip_pattern_1, rip_pattern_2, plex_pattern]
+	patterns = [rip_pattern_0, rip_pattern_1, rip_pattern_2, rip_pattern_3, plex_pattern]
 	# Strip sanitise and organise video files
 	current_folder = os.getcwd()
 	total_files = len(
@@ -103,13 +104,22 @@ def extract_season_episode(filename, patterns):
 	for pattern in patterns:
 		match = pattern.search(filename)
 		if match:
-			season = re.search(r's(\d{1,2})', match.group(0), re.IGNORECASE)
-			if season:
-				season = season.group(1)
-			episode = re.search(r'e(\d{1,2})', match.group(0), re.IGNORECASE)
-			if episode:
-				episode = episode.group(1)
-		break
+			if pattern.pattern == patterns[0].pattern:  # rip_pattern_0
+				season = re.search(r's(\d{1,2})', match.group(0), re.IGNORECASE)
+				episode = re.search(r'e(\d{1,2})', match.group(0), re.IGNORECASE)
+			elif pattern.pattern == patterns[1].pattern:  # rip_pattern_1
+				season = re.search(r's(\d{1,2})', match.group(0), re.IGNORECASE)
+				episode = re.search(r'e(\d{1,2})', match.group(0), re.IGNORECASE)
+			elif pattern.pattern == patterns[2].pattern:  # rip_pattern_2
+				season = re.search(r'(\d{1,2})x', match.group(0), re.IGNORECASE)
+				episode = re.search(r'x(\d{1,2})', match.group(0), re.IGNORECASE)
+			elif pattern.pattern == patterns[3].pattern:  # rip_pattern_3
+				season = re.search(r'season[\s._-]?(\d{1,4})', match.group(0), re.IGNORECASE)
+				episode = re.search(r'episode[\s._-]?(\d{1,4})', match.group(0), re.IGNORECASE)
+			elif pattern.pattern == patterns[4].pattern:  # plex_pattern
+				season = match.group(1)
+				episode = match.group(2)
+			break
 	return season, episode
 
 if __name__ == "__main__":
