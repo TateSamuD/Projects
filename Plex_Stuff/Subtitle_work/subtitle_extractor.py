@@ -7,6 +7,7 @@ SUBTITLE_EDIT_PATH = r"C:\Program Files\Subtitle Edit\SubtitleEdit.exe"
 def check_tools():
 	if not os.path.exists(SUBTITLE_EDIT_PATH):
 		print("Subtitle Edit executable not found.")
+		print(f"Expected at: {SUBTITLE_EDIT_PATH}")
 		print("To install Subtitle Edit, visit: https://www.nikse.dk/SubtitleEdit")
 		return False
 
